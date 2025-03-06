@@ -62,9 +62,9 @@ etcetera = "0.8.0"
 rand = "0.8.5"
 
 # For Bedrock provider
-aws-config = { version = "1.1.7", features = ["behavior-version-latest"] }
-aws-smithy-types = "1.2.12"
-aws-sdk-bedrockruntime = "1.72.0"
+aws-config = { version = "1.5.18", features = ["behavior-version-latest"] }
+aws-smithy-types = "1.2.13"
+aws-sdk-bedrockruntime = "1.75.0"
 
 # For GCP Vertex AI provider auth
 jsonwebtoken = "9.3.1"

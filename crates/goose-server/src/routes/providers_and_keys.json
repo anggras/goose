@@ -52,5 +52,11 @@
         "description": "Connect to Azure OpenAI Service",
         "models": ["gpt-4o", "gpt-4o-mini"],
         "required_keys": ["AZURE_OPENAI_API_KEY", "AZURE_OPENAI_ENDPOINT", "AZURE_OPENAI_DEPLOYMENT_NAME"]
+    },
+    "amazon_bedrock": {
+        "name": "Amazon Bedrock",
+        "description": "Connect to Amazon Bedrock Service",
+        "models": ["us.anthropic.claude-3-5-sonnet-20241022-v2:0", "us.anthropic.claude-3-5-sonnet-20240620-v1:0", "us.anthropic.claude-3-7-sonnet-20250219-v1:0", "us.anthropic.claude-3-5-haiku-20241022-v1:0", "amazon.nova-pro-v1:0", "amazon.nova-lite-v1:0", "amazon.nova-micro-v1:0"],
+        "required_keys": ["AWS_PROFILE", "AWS_REGION"]
     }
 }

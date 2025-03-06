@@ -1,5 +1,7 @@
 use anyhow::Result;
 use async_trait::async_trait;
+use aws_config::BehaviorVersion;
+use aws_config::Region;
 use aws_sdk_bedrockruntime::operation::converse::ConverseError;
 use aws_sdk_bedrockruntime::{types as bedrock, Client};
 use mcp_core::Tool;
@@ -33,7 +35,11 @@ pub struct BedrockProvider {
 
 impl BedrockProvider {
     pub fn from_env(model: ModelConfig) -> Result<Self> {
-        let sdk_config = futures::executor::block_on(aws_config::load_from_env());
+        let config = crate::config::Config::global();
+        let aws_profile: String = config.get_secret("AWS_PROFILE")?;
+        let aws_region: String = config.get_secret("AWS_REGION")?;
+
+        let sdk_config = futures::executor::block_on(aws_config::defaults(BehaviorVersion::latest()).region(Region::new(aws_region)).profile_name(aws_profile).load());
         let client = Client::new(&sdk_config);
 
         Ok(Self { client, model })
@@ -51,7 +57,7 @@ impl Default for BedrockProvider {
 impl Provider for BedrockProvider {
     fn metadata() -> ProviderMetadata {
         ProviderMetadata::new(
-            "bedrock",
+            "amazon_bedrock",
             "Amazon Bedrock",
             "Run models through Amazon Bedrock. You may have to set AWS_ACCESS_KEY_ID, AWS_ACCESS_KEY, and AWS_REGION as env vars before configuring.",
             BEDROCK_DEFAULT_MODEL,
