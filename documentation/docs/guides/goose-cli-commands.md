@@ -144,14 +144,18 @@ goose mcp <name>
 
 ### run [options]
 
-Execute commands from an instruction file or stdin
+Execute commands from an instruction file or stdin. Check out the [full guide](/docs/guides/running-tasks) for more info.
 
 **Options:**
 
 - **`-i, --instructions <FILE>`**: Path to instruction file containing commands
 - **`-t, --text <TEXT>`**: Input text to provide to Goose directly
-- **`-n, --name <NAME>`**: Name for this run session (e.g., 'daily-tasks')
+- **`-s, --interactive`**: Continue in interactive mode after processing initial input
+- **`-n, --name <NAME>`**: Name for this run session (e.g. 'daily-tasks')
 - **`-r, --resume`**: Resume from a previous run
+- **`-p, --path <PATH>`**: Path for this run session (e.g. './playground.jsonl')
+- **`--with-extension <COMMAND>`**: Add stdio extensions (can be used multiple times in the same command)
+- **`--with-builtin <NAME>`**: Add builtin extensions by name (e.g., 'developer' or multiple: 'developer,github')
 
 **Usage:**
 
@@ -176,12 +180,12 @@ goose agents
 
 Goose CLI supports several shortcuts and built-in commands for easier navigation.
 
-### **Slash Commands**
+### Slash Commands
 - **`/exit` or `/quit`** - Exit the session
 - **`/t`** - Toggle between Light/Dark modes
 - **`/?` or `/help`** - Display the help menu
 
-### **Keyboard Navigation**
+### Keyboard Navigation
 - **`Ctrl+C`** - Interrupt the current request
 - **`Ctrl+J`** - Add a newline
 - **Up/Down arrows** - Navigate through command history

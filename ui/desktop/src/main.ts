@@ -38,31 +38,25 @@ if (started) app.quit();
 app.setAsDefaultProtocolClient('goose');
 
 // Triggered when the user opens "goose://..." links
+let firstOpenWindow: BrowserWindow;
+let pendingDeepLink = null; // Store deep link if sent before React is ready
 app.on('open-url', async (event, url) => {
-  event.preventDefault();
+  pendingDeepLink = url;
 
   // Get existing window or create new one
-  let targetWindow: BrowserWindow;
   const existingWindows = BrowserWindow.getAllWindows();
 
   if (existingWindows.length > 0) {
-    targetWindow = existingWindows[0];
-    if (targetWindow.isMinimized()) targetWindow.restore();
-    targetWindow.focus();
+    firstOpenWindow = existingWindows[0];
+    if (firstOpenWindow.isMinimized()) firstOpenWindow.restore();
+    firstOpenWindow.focus();
   } else {
     const recentDirs = loadRecentDirs();
     const openDir = recentDirs.length > 0 ? recentDirs[0] : null;
-    targetWindow = await createChat(app, undefined, openDir);
+    firstOpenWindow = await createChat(app, undefined, openDir);
   }
 
-  // Wait for window to be ready before sending the extension URL
-  if (!targetWindow.webContents.isLoading()) {
-    targetWindow.webContents.send('add-extension', url);
-  } else {
-    targetWindow.webContents.once('did-finish-load', () => {
-      targetWindow.webContents.send('add-extension', url);
-    });
-  }
+  firstOpenWindow.webContents.send('add-extension', pendingDeepLink);
 });
 
 declare var MAIN_WINDOW_VITE_DEV_SERVER_URL: string;
@@ -115,7 +109,13 @@ let appConfig = {
 let windowCounter = 0;
 const windowMap = new Map<number, BrowserWindow>();
 
-const createChat = async (app, query?: string, dir?: string, version?: string) => {
+const createChat = async (
+  app,
+  query?: string,
+  dir?: string,
+  version?: string,
+  resumeSessionId?: string
+) => {
   // Apply current environment settings before creating chat
   updateEnvironmentVariables(envToggles);
 
@@ -158,7 +158,18 @@ const createChat = async (app, query?: string, dir?: string, version?: string) =
   });
 
   // Load the index.html of the app.
-  const queryParam = query ? `?initialQuery=${encodeURIComponent(query)}` : '';
+  let queryParams = '';
+  if (query) {
+    queryParams = `?initialQuery=${encodeURIComponent(query)}`;
+  }
+
+  // Add resumeSessionId to query params if provided
+  if (resumeSessionId) {
+    queryParams = queryParams
+      ? `${queryParams}&resumeSessionId=${encodeURIComponent(resumeSessionId)}`
+      : `?resumeSessionId=${encodeURIComponent(resumeSessionId)}`;
+  }
+
   const primaryDisplay = electron.screen.getPrimaryDisplay();
   const { width } = primaryDisplay.workAreaSize;
 
@@ -173,13 +184,13 @@ const createChat = async (app, query?: string, dir?: string, version?: string) =
   mainWindow.setPosition(baseXPosition + xOffset, 100);
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(`${MAIN_WINDOW_VITE_DEV_SERVER_URL}${queryParam}`);
+    mainWindow.loadURL(`${MAIN_WINDOW_VITE_DEV_SERVER_URL}${queryParams}`);
   } else {
     // In production, we need to use a proper file protocol URL with correct base path
     const indexPath = path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`);
     console.log('Loading production path:', indexPath);
     mainWindow.loadFile(indexPath, {
-      search: queryParam ? queryParam.slice(1) : undefined,
+      search: queryParams ? queryParams.slice(1) : undefined,
     });
   }
 
@@ -313,6 +324,13 @@ process.on('uncaughtException', (error) => {
 process.on('unhandledRejection', (error) => {
   console.error('Unhandled Rejection:', error);
   handleFatalError(error instanceof Error ? error : new Error(String(error)));
+});
+
+ipcMain.on('react-ready', (event) => {
+  if (pendingDeepLink) {
+    firstOpenWindow.webContents.send('add-extension', pendingDeepLink);
+    pendingDeepLink = null;
+  }
 });
 
 // Add file/directory selection handler
@@ -460,12 +478,12 @@ app.whenReady().then(async () => {
     }
   });
 
-  ipcMain.on('create-chat-window', (_, query, dir, version) => {
+  ipcMain.on('create-chat-window', (_, query, dir, version, resumeSessionId) => {
     if (!dir?.trim()) {
       const recentDirs = loadRecentDirs();
       dir = recentDirs.length > 0 ? recentDirs[0] : null;
     }
-    createChat(app, query, dir, version);
+    createChat(app, query, dir, version, resumeSessionId);
   });
 
   ipcMain.on('directory-chooser', (_, replace: boolean = false) => {

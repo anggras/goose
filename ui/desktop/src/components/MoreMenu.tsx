@@ -241,17 +241,20 @@ export default function MoreMenu({
               }}
               className="w-full text-left p-2 text-sm hover:bg-bgSubtle transition-colors"
             >
-              Open Directory (cmd+O)
+              Open Directory <span className="text-textSubtle">⌘O</span>
             </button>
 
             <button
               onClick={() => {
                 setOpen(false);
-                window.electron.createChatWindow();
+                window.electron.createChatWindow(
+                  undefined,
+                  window.appConfig.get('GOOSE_WORKING_DIR')
+                );
               }}
               className="w-full text-left p-2 text-sm hover:bg-bgSubtle transition-colors"
             >
-              New Session (cmd+N)
+              New Session <span className="text-textSubtle">⌘N</span>
             </button>
 
             {/* View Previous Sessions */}
@@ -270,7 +273,7 @@ export default function MoreMenu({
               }}
               className="w-full text-left p-2 text-sm hover:bg-bgSubtle transition-colors"
             >
-              Settings (cmd+,)
+              Settings <span className="text-textSubtle">⌘,</span>
             </button>
 
             <button

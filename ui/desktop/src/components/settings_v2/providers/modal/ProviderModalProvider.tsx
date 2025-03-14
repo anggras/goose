@@ -1,30 +1,28 @@
 import React, { createContext, useContext, useState } from 'react';
-import ProviderState from '../interfaces/ProviderState';
+import { ProviderDetails } from '../../../../api/types.gen';
+
+interface ModalProps {
+  onSubmit?: (values: any) => void;
+  onCancel?: () => void;
+  formProps?: any;
+}
 
 interface ProviderModalContextType {
   isOpen: boolean;
-  currentProvider: ProviderState | null;
-  modalProps: any;
-  openModal: (provider: ProviderState, additionalProps: any) => void;
+  currentProvider: ProviderDetails | null;
+  modalProps: ModalProps;
+  openModal: (provider: ProviderDetails, additionalProps?: ModalProps) => void;
   closeModal: () => void;
 }
 
-const ProviderModalContext = createContext({
-  isOpen: false,
-  currentProvider: null,
-  modalProps: {},
-  openModal: (provider, additionalProps) => {},
-  closeModal: () => {},
-});
+const ProviderModalContext = createContext<ProviderModalContextType | undefined>(undefined);
 
-export const useProviderModal = () => useContext<ProviderModalContextType>(ProviderModalContext);
-
-export const ProviderModalProvider = ({ children }) => {
+export const ProviderModalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [currentProvider, setCurrentProvider] = useState(null);
-  const [modalProps, setModalProps] = useState({});
+  const [currentProvider, setCurrentProvider] = useState<ProviderDetails | null>(null);
+  const [modalProps, setModalProps] = useState<ModalProps>({});
 
-  const openModal = (provider, additionalProps = {}) => {
+  const openModal = (provider: ProviderDetails, additionalProps: ModalProps = {}) => {
     setCurrentProvider(provider);
     setModalProps(additionalProps);
     setIsOpen(true);
@@ -32,11 +30,6 @@ export const ProviderModalProvider = ({ children }) => {
 
   const closeModal = () => {
     setIsOpen(false);
-    // Use a small timeout to prevent UI flicker
-    setTimeout(() => {
-      setCurrentProvider(null);
-      setModalProps({});
-    }, 200);
   };
 
   return (
@@ -52,4 +45,12 @@ export const ProviderModalProvider = ({ children }) => {
       {children}
     </ProviderModalContext.Provider>
   );
+};
+
+export const useProviderModal = () => {
+  const context = useContext(ProviderModalContext);
+  if (context === undefined) {
+    throw new Error('useProviderModal must be used within a ProviderModalProvider');
+  }
+  return context;
 };

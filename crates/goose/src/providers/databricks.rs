@@ -83,7 +83,7 @@ impl DatabricksProvider {
 
         // For compatibility for now we check both config and secret for databricks host
         // but it is not actually a secret value
-        let mut host: Result<String, ConfigError> = config.get("DATABRICKS_HOST");
+        let mut host: Result<String, ConfigError> = config.get_param("DATABRICKS_HOST");
 
         if host.is_err() {
             host = config.get_secret("DATABRICKS_HOST")
@@ -270,7 +270,7 @@ impl Provider for DatabricksProvider {
             Err(e) => return Err(e),
         };
         let model = get_model(&response);
-        super::utils::emit_debug_trace(self, &payload, &response, &usage);
+        super::utils::emit_debug_trace(&self.model, &payload, &response, &usage);
 
         Ok((message, ProviderUsage::new(model, usage)))
     }

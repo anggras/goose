@@ -9,11 +9,13 @@ import { Content, ToolRequestMessageContent, ToolResponseMessageContent } from '
 import { snakeToTitleCase } from '../utils';
 
 interface ToolCallWithResponseProps {
+  isCancelledMessage: boolean;
   toolRequest: ToolRequestMessageContent;
   toolResponse?: ToolResponseMessageContent;
 }
 
 export default function ToolCallWithResponse({
+  isCancelledMessage,
   toolRequest,
   toolResponse,
 }: ToolCallWithResponseProps) {
@@ -27,17 +29,19 @@ export default function ToolCallWithResponse({
     <div className="w-full">
       <Card className="">
         <ToolCallView toolCall={toolCall} />
-        {toolResponse ? (
-          <ToolResultView
-            result={
-              toolResponse.toolResult.status === 'success'
-                ? toolResponse.toolResult.value
-                : undefined
-            }
-          />
-        ) : (
-          <LoadingPlaceholder />
-        )}
+        {!isCancelledMessage ? (
+          toolResponse ? (
+            <ToolResultView
+              result={
+                toolResponse.toolResult.status === 'success'
+                  ? toolResponse.toolResult.value
+                  : undefined
+              }
+            />
+          ) : (
+            <LoadingPlaceholder />
+          )
+        ) : undefined}
       </Card>
     </div>
   );
@@ -80,9 +84,6 @@ function ToolResultView({ result }: ToolResultViewProps) {
 
   // Find results where either audience is not set, or it's set to a list that includes user
   const filteredResults = result.filter((item) => {
-    if (!item.annotations) {
-      return false;
-    }
     // Check audience (which may not be in the type)
     const audience = item.annotations?.audience;
 
@@ -99,7 +100,9 @@ function ToolResultView({ result }: ToolResultViewProps) {
 
   const shouldShowExpanded = (item: Content, index: number) => {
     return (
-      (item.annotations.priority !== undefined && item.annotations.priority >= 0.5) ||
+      (item.annotations &&
+        item.annotations.priority !== undefined &&
+        item.annotations.priority >= 0.5) ||
       expandedItems.includes(index)
     );
   };
@@ -109,7 +112,9 @@ function ToolResultView({ result }: ToolResultViewProps) {
       {filteredResults.map((item, index) => {
         const isExpanded = shouldShowExpanded(item, index);
         const shouldMinimize =
-          item.annotations.priority === undefined || item.annotations.priority < 0.5;
+          !item.annotations ||
+          item.annotations.priority === undefined ||
+          item.annotations.priority < 0.5;
         return (
           <div key={index} className="relative">
             {shouldMinimize && (
@@ -125,10 +130,21 @@ function ToolResultView({ result }: ToolResultViewProps) {
             )}
             {(isExpanded || !shouldMinimize) && (
               <>
-                {item.text && (
+                {item.type === 'text' && item.text && (
                   <MarkdownContent
                     content={item.text}
                     className="whitespace-pre-wrap p-2 max-w-full overflow-x-auto"
+                  />
+                )}
+                {item.type === 'image' && (
+                  <img
+                    src={`data:${item.mimeType};base64,${item.data}`}
+                    alt="Tool result"
+                    className="max-w-full h-auto rounded-md my-2"
+                    onError={(e) => {
+                      console.error('Failed to load image: Invalid MIME-type encoded image data');
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                 )}
               </>

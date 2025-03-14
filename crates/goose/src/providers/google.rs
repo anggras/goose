@@ -50,7 +50,7 @@ impl GoogleProvider {
         let config = crate::config::Config::global();
         let api_key: String = config.get_secret("GOOGLE_API_KEY")?;
         let host: String = config
-            .get("GOOGLE_HOST")
+            .get_param("GOOGLE_HOST")
             .unwrap_or_else(|_| GOOGLE_API_HOST.to_string());
 
         let client = Client::builder()
@@ -133,7 +133,7 @@ impl Provider for GoogleProvider {
             Some(model_version) => model_version.as_str().unwrap_or_default().to_string(),
             None => self.model.model_name.clone(),
         };
-        emit_debug_trace(self, &payload, &response, &usage);
+        emit_debug_trace(&self.model, &payload, &response, &usage);
         let provider_usage = ProviderUsage::new(model, usage);
         Ok((message, provider_usage))
     }

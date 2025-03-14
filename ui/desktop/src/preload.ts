@@ -4,10 +4,16 @@ const config = JSON.parse(process.argv.find((arg) => arg.startsWith('{')) || '{}
 
 // Define the API types in a single place
 type ElectronAPI = {
+  reactReady: () => void;
   getConfig: () => Record<string, any>;
   hideWindow: () => void;
   directoryChooser: (replace: string) => void;
-  createChatWindow: (query?: string, dir?: string, version?: string) => void;
+  createChatWindow: (
+    query?: string,
+    dir?: string,
+    version?: string,
+    resumeSessionId?: string
+  ) => void;
   logInfo: (txt: string) => void;
   showNotification: (data: any) => void;
   openInChrome: (url: string) => void;
@@ -18,7 +24,9 @@ type ElectronAPI = {
   startPowerSaveBlocker: () => Promise<number>;
   stopPowerSaveBlocker: () => Promise<void>;
   getBinaryPath: (binaryName: string) => Promise<string>;
-  readFile: (directory: string) => Promise<{ file: string; filePath: string; error: string; found: boolean }>;
+  readFile: (
+    directory: string
+  ) => Promise<{ file: string; filePath: string; error: string; found: boolean }>;
   writeFile: (directory: string, content: string) => Promise<boolean>;
   on: (
     channel: string,
@@ -37,11 +45,12 @@ type AppConfigAPI = {
 };
 
 const electronAPI: ElectronAPI = {
+  reactReady: () => ipcRenderer.send('react-ready'),
   getConfig: () => config,
   hideWindow: () => ipcRenderer.send('hide-window'),
   directoryChooser: (replace: string) => ipcRenderer.send('directory-chooser', replace),
-  createChatWindow: (query?: string, dir?: string, version?: string) =>
-    ipcRenderer.send('create-chat-window', query, dir, version),
+  createChatWindow: (query?: string, dir?: string, version?: string, resumeSessionId?: string) =>
+    ipcRenderer.send('create-chat-window', query, dir, version, resumeSessionId),
   logInfo: (txt: string) => ipcRenderer.send('logInfo', txt),
   showNotification: (data: any) => ipcRenderer.send('notify', data),
   openInChrome: (url: string) => ipcRenderer.send('open-in-chrome', url),
@@ -53,7 +62,8 @@ const electronAPI: ElectronAPI = {
   stopPowerSaveBlocker: () => ipcRenderer.invoke('stop-power-save-blocker'),
   getBinaryPath: (binaryName: string) => ipcRenderer.invoke('get-binary-path', binaryName),
   readFile: (filePath: string) => ipcRenderer.invoke('read-file', filePath),
-  writeFile: (filePath: string, content: string) => ipcRenderer.invoke('write-file', filePath, content),
+  writeFile: (filePath: string, content: string) =>
+    ipcRenderer.invoke('write-file', filePath, content),
   on: (channel: string, callback: (event: Electron.IpcRendererEvent, ...args: any[]) => void) => {
     ipcRenderer.on(channel, callback);
   },
