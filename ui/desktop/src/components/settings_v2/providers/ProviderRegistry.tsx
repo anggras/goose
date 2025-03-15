@@ -206,4 +206,23 @@ export const PROVIDER_REGISTRY: ProviderRegistry[] = [
       ],
     },
   },
+  {
+    name: 'Amazon Bedrock',
+    details: {
+      id: 'amazon_bedrock',
+      name: 'Amazon Bedrock',
+      description: 'Amazon Bedrock foundation models',
+      parameters: [
+        {
+          name: 'AWS_PROFILE',
+          is_secret: false,
+        },
+        {
+          name: 'AWS_REGION',
+          is_secret: false,
+          default: 'us-east-1',
+        },
+      ],
+    },
+  },
 ];
