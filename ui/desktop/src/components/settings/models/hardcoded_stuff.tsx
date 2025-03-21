@@ -92,7 +92,7 @@ export const default_models = {
   ollama: 'qwen2.5',
   azure_openai: 'gpt-4o',
   gcp_vertex_ai: 'gemini-2.0-flash-001',
-  aws_bedrock: 'us.anthropic.claude-3-5-sonnet-20241022-v2:0',
+  amazon_bedrock: 'us.anthropic.claude-3-5-sonnet-20241022-v2:0',
 };
 
 export function getDefaultModel(key: string): string | undefined {
